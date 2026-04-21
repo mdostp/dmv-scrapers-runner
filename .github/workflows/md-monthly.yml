@@ -11,7 +11,7 @@ jobs:
   call-scraper:
     uses: ./.github/workflows/_scraper-template.yml
     with:
-      target_repo: OWNER/md-dmv-scraper   # <-- replace OWNER with your GitHub username/org
+      target_repo: mdostp/md-dmv-scraper   # <-- replace OWNER with your GitHub username/org
       python_version: '3.11'
       requirements_file: 'requirements_monthly.txt'
       run_commands: |
