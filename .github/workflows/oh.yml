@@ -18,7 +18,7 @@ jobs:
   call-scraper:
     uses: ./.github/workflows/_scraper-template.yml
     with:
-      target_repo: OWNER/oh-dmv-scraper   # <-- replace OWNER with your GitHub username/org
+      target_repo: mdostp/oh-dmv-scraper   # <-- replace OWNER with your GitHub username/org
       python_version: '3.11'
       pip_packages: 'requests pandas beautifulsoup4'
       run_commands: |
