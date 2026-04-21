@@ -1,0 +1,20 @@
+name: MD DMV - Weekly Scraper
+
+on:
+  schedule:
+    # 10:00 AM Eastern (2:00 PM UTC) every Monday
+    - cron: '0 14 * * 1'
+  workflow_dispatch:
+
+jobs:
+  call-scraper:
+    uses: ./.github/workflows/_scraper-template.yml
+    with:
+      target_repo: mdostp/md-dmv-scraper
+      python_version: '3.11'
+      requirements_file: 'requirements.txt'
+      run_commands: |
+        python visittime_services.py --once
+      commit_paths: 'visittime_services.csv'
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
