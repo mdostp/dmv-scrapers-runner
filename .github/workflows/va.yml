@@ -17,7 +17,7 @@ jobs:
   call-scraper:
     uses: ./.github/workflows/_scraper-template.yml
     with:
-      target_repo: OWNER/va-dmv-scraper   # <-- replace OWNER with your GitHub username/org
+      target_repo: mdostp/va-dmv-scraper   # <-- replace OWNER with your GitHub username/org
       python_version: '3.11'
       # VA uses inline packages rather than a requirements.txt
       pip_packages: 'aiohttp beautifulsoup4'
