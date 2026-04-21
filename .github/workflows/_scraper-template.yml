@@ -1,0 +1,121 @@
+name: Scraper Template (Reusable)
+
+# This is a reusable workflow. It's called by the individual per-repo
+# workflows (e.g. md-daily.yml, va.yml, oh.yml). It handles all the
+# shared execution logic: checking out the private repo, setting up
+# Python, installing dependencies, running the scraper script(s),
+# and committing results back to the private repo.
+
+on:
+  workflow_call:
+    inputs:
+      # The private repo to check out and run, e.g. "meredith/md-dmv-scraper"
+      target_repo:
+        required: true
+        type: string
+
+      # Python version (defaults to 3.11)
+      python_version:
+        required: false
+        type: string
+        default: '3.11'
+
+      # Path to requirements.txt inside the target repo.
+      # If blank, we'll use the `pip_packages` input instead.
+      requirements_file:
+        required: false
+        type: string
+        default: ''
+
+      # Space-separated list of pip packages (used when requirements_file is blank)
+      # e.g. "requests pandas beautifulsoup4"
+      pip_packages:
+        required: false
+        type: string
+        default: ''
+
+      # The command(s) to run the scraper, as a multi-line string.
+      # e.g. "python waittime.py --once\npython visittime_services.py --once"
+      run_commands:
+        required: true
+        type: string
+
+      # Glob pattern of files to git-add and commit back to the private repo
+      # e.g. "*.csv" or "waittime.csv visittime.csv"
+      commit_paths:
+        required: false
+        type: string
+        default: '*.csv'
+
+      # Whether the scraper needs DMV cookies/headers secrets (used by VA)
+      needs_dmv_secrets:
+        required: false
+        type: boolean
+        default: false
+
+    secrets:
+      # PAT with repo scope, needed to check out and push to the private repo
+      PRIVATE_REPO_TOKEN:
+        required: true
+      # Optional DMV secrets — only needed for scrapers that use them (e.g. VA)
+      DMV_COOKIES:
+        required: false
+      DMV_HEADERS:
+        required: false
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out private repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.target_repo }}
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          # Fetch full history so we can rebase/push cleanly
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: Cache pip packages
+        if: inputs.requirements_file != ''
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles(format('{0}', inputs.requirements_file)) }}
+
+      - name: Install dependencies (from requirements file)
+        if: inputs.requirements_file != ''
+        run: pip install -r ${{ inputs.requirements_file }}
+
+      - name: Install dependencies (from pip_packages)
+        if: inputs.requirements_file == '' && inputs.pip_packages != ''
+        run: pip install ${{ inputs.pip_packages }}
+
+      - name: Pull latest before running
+        run: git pull --rebase || true
+
+      - name: Run scraper (without DMV secrets)
+        if: inputs.needs_dmv_secrets == false
+        run: |
+          ${{ inputs.run_commands }}
+
+      - name: Run scraper (with DMV secrets)
+        if: inputs.needs_dmv_secrets == true
+        env:
+          DMV_COOKIES: ${{ secrets.DMV_COOKIES }}
+          DMV_HEADERS: ${{ secrets.DMV_HEADERS }}
+        run: |
+          ${{ inputs.run_commands }}
+
+      - name: Commit and push updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ${{ inputs.commit_paths }}
+          git commit -m "Update data $(date -u +'%Y-%m-%d %H:%M UTC')" || echo "No changes to commit"
+          git pull --rebase || true
+          git push
