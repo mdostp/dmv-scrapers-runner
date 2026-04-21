@@ -1,0 +1,21 @@
+name: MD DMV - Monthly Scraper
+
+on:
+  schedule:
+    # Runs at 10:00 AM Eastern (3:00 PM UTC) on the 1st and 29th of each month.
+    # This approximates every 4 weeks.
+    - cron: '0 14 1,29 * *'
+  workflow_dispatch:
+
+jobs:
+  call-scraper:
+    uses: ./.github/workflows/_scraper-template.yml
+    with:
+      target_repo: OWNER/md-dmv-scraper   # <-- replace OWNER with your GitHub username/org
+      python_version: '3.11'
+      requirements_file: 'requirements_monthly.txt'
+      run_commands: |
+        python visittime_30days.py --once
+      commit_paths: '*.csv'
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}

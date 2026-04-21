@@ -1,0 +1,23 @@
+name: MD DMV - Daily Scraper
+
+on:
+  schedule:
+    # All times Eastern (EDT = UTC-4). Captures pre-peak, 11am transition, afternoon peak.
+    - cron: '0 13 * * 1-6'    # 9:00 AM ET  — morning baseline (pre-peak)
+    - cron: '30 14 * * 1-6'   # 10:30 AM ET — captures the 11am transition
+    - cron: '0 19 * * 1-6'    # 3:00 PM ET  — afternoon peak
+  workflow_dispatch:
+
+jobs:
+  call-scraper:
+    uses: ./.github/workflows/_scraper-template.yml
+    with:
+      target_repo: OWNER/md-dmv-scraper   # <-- replace OWNER with your GitHub username/org
+      python_version: '3.11'
+      requirements_file: 'requirements.txt'
+      run_commands: |
+        python waittime.py --once
+        python visittime_services.py --once
+      commit_paths: 'waittime.csv visittime.csv'
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
