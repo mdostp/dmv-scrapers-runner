@@ -1,0 +1,38 @@
+name: WI DMV Scraper
+
+on:
+  schedule:
+    # All times Central (CT). Active schedule only; old schedule preserved below as reference.
+    - cron: '0 14 * * 1-6'   #  9:00 AM CT  — most reliable slot, captures post-open rise (95%)
+    - cron: '0 17 * * 1-6'   # 12:00 PM CT  — midday peak (90%)
+    - cron: '0 20 * * 1-5'   #  3:00 PM CT  — afternoon secondary peak, weekdays (62%)
+
+    # ── Previous schedule (commented out, preserved for reference) ──
+    # - cron: '0 12 * * 1-6'    # 7:00 AM CT
+    # - cron: '30 12 * * 1-6'   # 7:30 AM CT
+    # - cron: '30 13 * * 1-6'   # 8:30 AM CT
+    # - cron: '30 14 * * 1-6'   # 9:30 AM CT
+    # - cron: '30 16 * * 1-6'   # 11:30 AM CT
+    # - cron: '0 18 * * 1-5'    # 1:00 PM CT
+    # - cron: '30 19 * * 1-5'   # 2:30 PM CT
+    # - cron: '40 21 * * 1-5'   # 4:40 PM CT
+    # - cron: '30 22 * * 1-5'   # 5:30 PM CT
+    # - cron: '50 23 * * 1-5'   # 6:50 PM CT
+    # - cron: '0 17 * * 6'      # 12:00 PM CT (Saturday)
+    # - cron: '0 13 * * 1-6'    # 8:00 AM CT
+  workflow_dispatch:
+
+jobs:
+  call-scraper:
+    uses: ./.github/workflows/_scraper-template.yml
+    with:
+      target_repo: mdostp/wi-dmv-scraper
+      python_version: '3.11'
+      pip_packages: 'requests beautifulsoup4 playwright==1.58.0 pandas'
+      needs_playwright: true
+      playwright_version: '1.58.0'
+      run_commands: |
+        python WI_waittime_scraper.py --once
+      commit_paths: '*.csv'
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}

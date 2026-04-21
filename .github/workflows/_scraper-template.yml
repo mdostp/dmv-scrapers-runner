@@ -1,15 +1,15 @@
 name: Scraper Template (Reusable)
 
 # This is a reusable workflow. It's called by the individual per-repo
-# workflows (e.g. md-daily.yml, va.yml, oh.yml). It handles all the
-# shared execution logic: checking out the private repo, setting up
-# Python, installing dependencies, running the scraper script(s),
-# and committing results back to the private repo.
+# workflows. It handles all shared execution logic: checking out the
+# private repo, setting up Python, installing dependencies (pip +
+# optional Playwright), running the scraper script(s), and committing
+# results back to the private repo.
 
 on:
   workflow_call:
     inputs:
-      # The private repo to check out and run, e.g. "meredith/md-dmv-scraper"
+      # The private repo to check out and run, e.g. "mdostp/md-dmv-scraper"
       target_repo:
         required: true
         type: string
@@ -33,6 +33,19 @@ on:
         required: false
         type: string
         default: ''
+
+      # If true, install Playwright Chromium browser after pip install
+      # (needed for scrapers that use Playwright, e.g. WI, TX)
+      needs_playwright:
+        required: false
+        type: boolean
+        default: false
+
+      # Playwright version for cache key (only used when needs_playwright is true)
+      playwright_version:
+        required: false
+        type: string
+        default: '1.58.0'
 
       # The command(s) to run the scraper, as a multi-line string.
       # e.g. "python waittime.py --once\npython visittime_services.py --once"
@@ -72,7 +85,6 @@ jobs:
         with:
           repository: ${{ inputs.target_repo }}
           token: ${{ secrets.PRIVATE_REPO_TOKEN }}
-          # Fetch full history so we can rebase/push cleanly
           fetch-depth: 0
 
       - name: Set up Python
@@ -80,7 +92,7 @@ jobs:
         with:
           python-version: ${{ inputs.python_version }}
 
-      - name: Cache pip packages
+      - name: Cache pip packages (from requirements file)
         if: inputs.requirements_file != ''
         uses: actions/cache@v4
         with:
@@ -94,6 +106,18 @@ jobs:
       - name: Install dependencies (from pip_packages)
         if: inputs.requirements_file == '' && inputs.pip_packages != ''
         run: pip install ${{ inputs.pip_packages }}
+
+      - name: Cache Playwright browsers
+        if: inputs.needs_playwright == true
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-chromium-${{ inputs.playwright_version }}
+
+      - name: Install Playwright browsers
+        if: inputs.needs_playwright == true && steps.playwright-cache.outputs.cache-hit != 'true'
+        run: playwright install chromium --with-deps
 
       - name: Pull latest before running
         run: git pull --rebase || true

@@ -1,0 +1,22 @@
+name: NC DMV Appointment Availability Scraper
+
+on:
+  schedule:
+    # All times UTC. Approximate Central Time noted.
+    - cron: '0 13 * * 1-5'   # 13:00 UTC Mon–Fri (≈ 8 AM CDT)
+    - cron: '0 17 * * 1-5'   # 17:00 UTC Mon–Fri (≈ 12 PM CDT)
+    - cron: '0 21 * * 1-5'   # 21:00 UTC Mon–Fri (≈ 4 PM CDT)
+  workflow_dispatch:
+
+jobs:
+  call-scraper:
+    uses: ./.github/workflows/_scraper-template.yml
+    with:
+      target_repo: mdostp/nc-dmv-appt-avail-scraper
+      python_version: '3.12'
+      pip_packages: 'selenium'
+      run_commands: |
+        python NC_appointments.py --once --output NC_appointments.csv
+      commit_paths: 'NC_appointments.csv'
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}

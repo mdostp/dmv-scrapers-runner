@@ -1,0 +1,34 @@
+name: TX DPS Scraper
+
+on:
+  schedule:
+    # All times Central (CST = UTC-6). Active schedule only; old schedule preserved below as reference.
+    - cron: '30 16 * * 1-5'   # 11:30 AM CT
+
+    # ── Previous schedule (commented out, preserved for reference) ──
+    # - cron: '0 12 * * 1-6'    # 7:00 AM CT
+    # - cron: '0 13 * * 1-6'    # 8:00 AM CT
+    # - cron: '30 13 * * 1-6'   # 8:30 AM CT
+    # - cron: '0 15 * * 1-6'    # 10:00 AM CT
+    # - cron: '0 18 * * 1-6'    # 1:00 PM CT
+    # - cron: '30 19 * * 1-6'   # 2:30 PM CT
+    # - cron: '0 21 * * 1-6'    # 4:00 PM CT
+    # - cron: '0 22 * * 1-6'    # 5:00 PM CT
+    # - cron: '0 23 * * 1-6'    # 6:00 PM CT
+  workflow_dispatch:
+
+jobs:
+  call-scraper:
+    uses: ./.github/workflows/_scraper-template.yml
+    with:
+      target_repo: mdostp/tx-dlo-scraper
+      python_version: '3.11'
+      pip_packages: 'playwright beautifulsoup4'
+      needs_playwright: true
+      # Using 'latest' as the cache key since original workflow didn't pin a version
+      playwright_version: 'latest'
+      run_commands: |
+        python texas_dps_waittimes_daily.py
+      commit_paths: '*.csv'
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}

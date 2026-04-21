@@ -1,0 +1,25 @@
+name: NJ MVC Appointment Availability Scraper
+
+on:
+  schedule:
+    # All times UTC. Approximate Central Time noted.
+    - cron: '0 15 * * 1-5'   # 15:00 UTC Mon–Fri (≈ 10 AM CDT)
+
+    # ── Previous schedule (commented out, preserved for reference) ──
+    # - cron: '0 13 * * 1-5'   # ≈ 8 AM CDT
+    # - cron: '0 17 * * 1-5'   # ≈ 12 PM CDT
+    # - cron: '0 21 * * 1-5'   # ≈ 4 PM CDT
+  workflow_dispatch:
+
+jobs:
+  call-scraper:
+    uses: ./.github/workflows/_scraper-template.yml
+    with:
+      target_repo: mdostp/nj-apptavail-scraper
+      python_version: '3.12'
+      pip_packages: 'requests'
+      run_commands: |
+        python scrape_mvc_appointments.py --output mvc_appointments.csv
+      commit_paths: 'mvc_appointments.csv'
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}

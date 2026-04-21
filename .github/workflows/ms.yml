@@ -1,0 +1,26 @@
+name: MS DPS Appointment Availability Scrapers
+
+on:
+  schedule:
+    # All times UTC. Approximate Central Time noted.
+    - cron: '0 15 * * 1-5'   # 15:00 UTC Mon–Fri (≈ 10 AM CDT)
+
+    # ── Previous schedule (commented out, preserved for reference) ──
+    # - cron: '0 13 * * 1-5'   # ≈ 8 AM CDT
+    # - cron: '0 17 * * 1-5'   # ≈ 12 PM CDT
+    # - cron: '0 21 * * 1-5'   # ≈ 4 PM CDT
+  workflow_dispatch:
+
+jobs:
+  call-scraper:
+    uses: ./.github/workflows/_scraper-template.yml
+    with:
+      target_repo: mdostp/ms-apptavail-scraper
+      python_version: '3.12'
+      pip_packages: 'requests'
+      run_commands: |
+        python ms_dps_availability_scraper.py --output ms_dps_availability.csv
+        python ms_dps_id_availability_scraper.py --output ms_dps_id_availability.csv
+      commit_paths: 'ms_dps_availability.csv ms_dps_id_availability.csv'
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}

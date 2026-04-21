@@ -1,0 +1,35 @@
+name: CA DMV Scraper
+
+on:
+  schedule:
+    # Mon/Tue/Thu/Fri schedule
+    - cron: '0 15 * * 1,2,4,5'
+    - cron: '30 15 * * 1,2,4,5'
+    - cron: '0 17 * * 1,2,4,5'
+    - cron: '30 18 * * 1,2,4,5'
+    - cron: '0 20 * * 1,2,4,5'
+    - cron: '30 21 * * 1,2,4,5'
+    - cron: '0 23 * * 1,2,4,5'
+    # Overnight (late-evening PT)
+    - cron: '0 0 * * 2,3,4,5,6'
+    # Wednesday schedule
+    - cron: '0 16 * * 3'
+    - cron: '30 16 * * 3'
+    - cron: '0 18 * * 3'
+    - cron: '30 19 * * 3'
+    - cron: '0 21 * * 3'
+    - cron: '30 22 * * 3'
+  workflow_dispatch:
+
+jobs:
+  call-scraper:
+    uses: ./.github/workflows/_scraper-template.yml
+    with:
+      target_repo: mdostp/ca-dmv-scraper
+      python_version: '3.11'
+      pip_packages: 'aiohttp beautifulsoup4 pandas'
+      run_commands: |
+        python CA_waittime_scraper.py --once
+      commit_paths: '*.csv'
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}

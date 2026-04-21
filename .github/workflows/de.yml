@@ -1,0 +1,35 @@
+name: DE DMV Scraper
+
+on:
+  schedule:
+    # All times Eastern. UTC offsets assume EDT (UTC-4).
+    # Mon/Tue/Thu/Fri schedule
+    - cron: '0 12 * * 1,2,4,5'    # 8:00 AM ET
+    - cron: '30 12 * * 1,2,4,5'   # 8:30 AM ET
+    - cron: '0 14 * * 1,2,4,5'    # 10:00 AM ET
+    - cron: '30 16 * * 1,2,4,5'   # 12:30 PM ET
+    - cron: '0 18 * * 1,2,4,5'    # 2:00 PM ET
+    - cron: '30 19 * * 1,2,4,5'   # 3:30 PM ET
+    - cron: '0 20 * * 1,2,4,5'    # 4:00 PM ET
+    # Wednesday schedule
+    - cron: '0 15 * * 3'          # 11:00 AM ET
+    - cron: '30 15 * * 3'         # 11:30 AM ET
+    - cron: '0 17 * * 3'          # 1:00 PM ET
+    - cron: '30 18 * * 3'         # 2:30 PM ET
+    - cron: '0 20 * * 3'          # 4:00 PM ET
+    - cron: '30 21 * * 3'         # 5:30 PM ET
+    - cron: '30 22 * * 3'         # 6:30 PM ET
+  workflow_dispatch:
+
+jobs:
+  call-scraper:
+    uses: ./.github/workflows/_scraper-template.yml
+    with:
+      target_repo: mdostp/de-dmv-scraper
+      python_version: '3.11'
+      pip_packages: 'requests pandas'
+      run_commands: |
+        python delaware_waittimes.py --once
+      commit_paths: '*.csv'
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}

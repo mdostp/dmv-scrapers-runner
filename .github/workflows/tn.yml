@@ -1,0 +1,34 @@
+name: TN DMV Scraper
+
+on:
+  schedule:
+    # All times Central (CDT = UTC-5). Active schedule only; old schedule preserved below as reference.
+    - cron: '0 14 * * 1-5'   #  9:00 AM CT  — post-open rise (94%)
+    - cron: '0 16 * * 1-5'   # 11:00 AM CT  — climbing toward midday peak (88%)
+    - cron: '0 19 * * 1-5'   #  2:00 PM CT  — afternoon secondary peak (94%)
+    - cron: '0 21 * * 1-5'   #  4:00 PM CT  — near-closing baseline (94%)
+
+    # ── Previous schedule (commented out, preserved for reference) ──
+    # - cron: '30 12 * * 1-5'   # 8:30 AM Eastern
+    # - cron: '30 13 * * 1-5'   # 9:30 AM Eastern
+    # - cron: '0 14 * * 1-5'    # 10:00 AM Eastern
+    # - cron: '30 15 * * 1-5'   # 11:30 AM Eastern
+    # - cron: '0 17 * * 1-5'    # 1:00 PM Eastern
+    # - cron: '30 18 * * 1-5'   # 2:30 PM Eastern
+    # - cron: '0 20 * * 1-5'    # 4:00 PM Eastern
+    # - cron: '45 20 * * 1-5'   # 4:45 PM Eastern
+    # - cron: '45 21 * * 1-5'   # 5:45 PM Eastern
+  workflow_dispatch:
+
+jobs:
+  call-scraper:
+    uses: ./.github/workflows/_scraper-template.yml
+    with:
+      target_repo: mdostp/tn-dmv-scraper
+      python_version: '3.11'
+      pip_packages: 'requests pandas'
+      run_commands: |
+        python tn_dmv_scraper.py --once
+      commit_paths: '*.csv'
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}

@@ -1,0 +1,22 @@
+name: IN BMV Scraper
+
+on:
+  schedule:
+    # All times Eastern (EDT = UTC-4). Captures open, midday peak, late-day dip.
+    - cron: '0 12 * * 1-6'    # 8:00 AM ET  — morning baseline at open (92%)
+    - cron: '0 17 * * 1-6'    # 1:00 PM ET  — midday peak (88%)
+    - cron: '0 21 * * 1-5'    # 5:00 PM ET  — late-day drop, weekdays only (81%)
+  workflow_dispatch:
+
+jobs:
+  call-scraper:
+    uses: ./.github/workflows/_scraper-template.yml
+    with:
+      target_repo: mdostp/in-dmv-scraper
+      python_version: '3.11'
+      pip_packages: 'requests beautifulsoup4'
+      run_commands: |
+        python bmv_wait_times.py
+      commit_paths: '*.csv'
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
