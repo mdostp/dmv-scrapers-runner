@@ -1,0 +1,20 @@
+name: WV DMV Appointment Scraper
+
+on:
+  schedule:
+    - cron: '0 12 * * 1-5'   # 8:00 AM Eastern (UTC-4)
+    - cron: '0 20 * * 1-5'   # 4:00 PM Eastern (UTC-4)
+  workflow_dispatch:
+
+jobs:
+  call-scraper:
+    uses: ./.github/workflows/_scraper-template.yml
+    with:
+      target_repo: mdostp/wv-dmv-appt-scraper
+      python_version: '3.11'
+      pip_packages: 'requests pandas'
+      run_commands: |
+        python wv_appointments.py --once
+      commit_paths: 'wv_appointments.csv'
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
