@@ -23,10 +23,12 @@ jobs:
     with:
       target_repo: mdostp/tx-dlo-scraper
       python_version: '3.11'
-      pip_packages: 'playwright beautifulsoup4'
+      # Pin playwright to a specific version so the cache key stays stable.
+      # If you upgrade playwright in the scraper, update both this line
+      # and playwright_version below to match.
+      pip_packages: 'playwright==1.44.0 beautifulsoup4'
       needs_playwright: true
-      # Using 'latest' as the cache key since original workflow didn't pin a version
-      playwright_version: 'latest'
+      playwright_version: '1.44.0'
       run_commands: |
         python texas_dps_waittimes_daily.py
       commit_paths: '*.csv'

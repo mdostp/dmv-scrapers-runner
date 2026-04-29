@@ -28,9 +28,12 @@ jobs:
     with:
       target_repo: mdostp/wi-dmv-scraper
       python_version: '3.11'
-      pip_packages: 'requests beautifulsoup4 playwright==1.58.0 pandas'
+      # Pin playwright to a specific version so the cache key stays stable.
+      # If you upgrade playwright in the scraper, update both this line
+      # and playwright_version below to match.
+      pip_packages: 'requests beautifulsoup4 playwright==1.44.0 pandas'
       needs_playwright: true
-      playwright_version: '1.58.0'
+      playwright_version: '1.44.0'
       run_commands: |
         python WI_waittime_scraper.py --once
       commit_paths: '*.csv'
