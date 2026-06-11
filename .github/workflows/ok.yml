@@ -68,7 +68,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
           git add ok_waittimes.csv
-          git commit -m "Update data $(date -u +'%Y-%m-%d %H:%M UTC')" || echo "No changes to commit"
-          git pull --rebase || true
-          git push
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "Update data $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git pull --rebase origin main || (git rebase --abort && git push origin main --force-with-lease)
+          git push origin main
