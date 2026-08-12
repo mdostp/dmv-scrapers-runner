@@ -1,0 +1,24 @@
+name: KY Appointment Availability Scraper
+
+on:
+  schedule:
+    # Cron is always UTC. These fire at 9am / 12pm / 4pm ET during EDT
+    # (Mar-Nov) and 8am / 11am / 3pm ET during EST (Nov-Mar).
+    - cron: '0 13 * * *'
+    - cron: '0 16 * * *'
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+jobs:
+  call-scraper:
+    uses: ./.github/workflows/_scraper-template.yml
+    with:
+      target_repo: mdostp/ky_appt_avail
+      python_version: '3.12'
+      pip_packages: 'requests'
+      run_commands: |
+        mkdir -p data
+        python ky_appt_scraper.py --output data
+      commit_paths: 'data/ky_appointments.csv'
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
