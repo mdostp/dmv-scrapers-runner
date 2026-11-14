@@ -3,15 +3,16 @@ name: NEW NC DMV Scraper
 on:
   schedule:
     # All times UTC — Eastern is UTC-4 (EDT) or UTC-5 (EST)
-    # Assuming EDT (UTC-4), which applies Mar–Nov
-    - cron: '5 13 * * 1-5'    #  9:05 AM Eastern
-    - cron: '30 13 * * 1-5'   #  9:30 AM Eastern
-    - cron: '0 15 * * 1-5'    # 11:00 AM Eastern
-    - cron: '30 16 * * 1-5'   # 12:30 PM Eastern
-    - cron: '0 18 * * 1-5'    #  2:00 PM Eastern
-    - cron: '30 19 * * 1-5'   #  3:30 PM Eastern
-    - cron: '15 20 * * 1-5'   #  4:15 PM Eastern
-    - cron: '45 20 * * 1-5'   #  4:45 PM Eastern
+    # Assuming EST (UTC-5), which applies Nov–Mar
+    # When DST starts (2nd Sunday in March), subtract 1 from each UTC hour
+    - cron: '5 14 * * 1-5'    #  9:05 AM Eastern
+    - cron: '30 14 * * 1-5'   #  9:30 AM Eastern
+    - cron: '0 16 * * 1-5'    # 11:00 AM Eastern
+    - cron: '30 17 * * 1-5'   # 12:30 PM Eastern
+    - cron: '0 19 * * 1-5'    #  2:00 PM Eastern
+    - cron: '30 20 * * 1-5'   #  3:30 PM Eastern
+    - cron: '15 21 * * 1-5'   #  4:15 PM Eastern
+    - cron: '45 21 * * 1-5'   #  4:45 PM Eastern
   workflow_dispatch:
 
 jobs:
@@ -20,9 +21,9 @@ jobs:
     with:
       target_repo: mdostp/nc-dmv-scraper
       python_version: '3.11'
-      pip_packages: 'requests'
+      pip_packages: 'requests pandas'
       run_commands: |
-        python NC_waittime_scraper.py
+        python NC_waittime_scraper.py --once
       commit_paths: '*.csv'
     secrets:
       PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
