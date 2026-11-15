@@ -1,0 +1,35 @@
+name: AK DMV Scraper
+
+on:
+  schedule:
+    # All times UTC — Alaska is UTC-9 (AKST) or UTC-8 (AKDT)
+    # Assuming AKST (UTC-9), which applies Nov–Mar
+    # The last three runs fall after midnight UTC, so they use Tue–Sat (2-6)
+    # to land on Mon–Fri Alaska time.
+    # When DST starts (2nd Sunday in March), subtract 1 from each UTC hour;
+    # the 0:30 run then becomes '30 23 * * 1-5' (back to Mon–Fri).
+    - cron: '5 18 * * 1-5'    #  9:05 AM Alaska
+    - cron: '30 18 * * 1-5'   #  9:30 AM Alaska
+    - cron: '0 20 * * 1-5'    # 11:00 AM Alaska
+    - cron: '30 21 * * 1-5'   # 12:30 PM Alaska
+    - cron: '0 23 * * 1-5'    #  2:00 PM Alaska
+    - cron: '30 0 * * 2-6'    #  3:30 PM Alaska (next day UTC)
+    - cron: '15 1 * * 2-6'    #  4:15 PM Alaska (next day UTC)
+    - cron: '45 1 * * 2-6'    #  4:45 PM Alaska (next day UTC)
+  workflow_dispatch:
+
+jobs:
+  call-scraper:
+    uses: ./.github/workflows/_scraper-template.yml
+    with:
+      target_repo: mdostp/multistate-scrapers
+      python_version: '3.11'
+      pip_packages: 'requests'
+      # The script exits 1 if ANY office/service errored, even when the rest
+      # saved. The fallback keeps the job green so partial rows still get
+      # committed, and flags the run with a warning in the Actions UI.
+      run_commands: |
+        python AK_appointments.py --once || echo "::warning::AK scraper finished with errors; check the log"
+      commit_paths: '*.csv'
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}

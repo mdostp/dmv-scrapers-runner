@@ -1,0 +1,30 @@
+name: CO DMV Scraper
+
+on:
+  schedule:
+    # All times UTC — Mountain is UTC-7 (MST) or UTC-6 (MDT)
+    # Assuming MST (UTC-7), which applies Nov–Mar
+    # When DST starts (2nd Sunday in March), subtract 1 from each UTC hour
+    - cron: '5 16 * * 1-5'    #  9:05 AM Mountain
+    - cron: '30 16 * * 1-5'   #  9:30 AM Mountain
+    - cron: '0 18 * * 1-5'    # 11:00 AM Mountain
+    - cron: '30 19 * * 1-5'   # 12:30 PM Mountain
+    - cron: '0 21 * * 1-5'    #  2:00 PM Mountain
+    - cron: '30 22 * * 1-5'   #  3:30 PM Mountain
+    - cron: '15 23 * * 1-5'   #  4:15 PM Mountain
+    - cron: '45 23 * * 1-5'   #  4:45 PM Mountain
+  workflow_dispatch:
+
+jobs:
+  call-scraper:
+    uses: ./.github/workflows/_scraper-template.yml
+    with:
+      target_repo: mdostp/multistate-scrapers
+      python_version: '3.11'
+      pip_packages: 'requests beautifulsoup4 pandas'
+      # No --once flag: this script runs once by default and would reject it.
+      run_commands: |
+        python CO_appointments.py
+      commit_paths: '*.csv'
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}

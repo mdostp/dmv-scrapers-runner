@@ -1,0 +1,32 @@
+name: AR DMV Scraper
+
+on:
+  schedule:
+    # All times UTC — Central is UTC-6 (CST) or UTC-5 (CDT)
+    # Assuming CST (UTC-6), which applies Nov–Mar
+    # When DST starts (2nd Sunday in March), subtract 1 from each UTC hour
+    - cron: '5 15 * * 1-5'    #  9:05 AM Central
+    - cron: '30 15 * * 1-5'   #  9:30 AM Central
+    - cron: '0 17 * * 1-5'    # 11:00 AM Central
+    - cron: '30 18 * * 1-5'   # 12:30 PM Central
+    - cron: '0 20 * * 1-5'    #  2:00 PM Central
+    - cron: '30 21 * * 1-5'   #  3:30 PM Central
+    - cron: '15 22 * * 1-5'   #  4:15 PM Central
+    - cron: '45 22 * * 1-5'   #  4:45 PM Central
+  workflow_dispatch:
+
+jobs:
+  call-scraper:
+    uses: ./.github/workflows/_scraper-template.yml
+    with:
+      target_repo: mdostp/multistate-scrapers
+      python_version: '3.11'
+      pip_packages: 'requests beautifulsoup4'
+      # The script exits 1 if ANY office/service errored, even when the rest
+      # saved. The fallback keeps the job green so partial rows still get
+      # committed, and flags the run with a warning in the Actions UI.
+      run_commands: |
+        python AR_appointments.py --once || echo "::warning::AR scraper finished with errors; check the log"
+      commit_paths: '*.csv'
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}

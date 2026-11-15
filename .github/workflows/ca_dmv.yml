@@ -1,0 +1,38 @@
+name: CA DMV Scraper
+
+on:
+  schedule:
+    # All times UTC — Pacific is UTC-8 (PST) or UTC-7 (PDT)
+    # Assuming PST (UTC-8), which applies Nov–Mar
+    # The last two runs fall after midnight UTC, so they use Tue–Sat (2-6)
+    # to land on Mon–Fri Pacific.
+    # When DST starts (2nd Sunday in March), subtract 1 from each UTC hour;
+    # the 0:15 and 0:45 runs then become '15 23 * * 1-5' and '45 23 * * 1-5'.
+    - cron: '5 17 * * 1-5'    #  9:05 AM Pacific
+    - cron: '30 17 * * 1-5'   #  9:30 AM Pacific
+    - cron: '0 19 * * 1-5'    # 11:00 AM Pacific
+    - cron: '30 20 * * 1-5'   # 12:30 PM Pacific
+    - cron: '0 22 * * 1-5'    #  2:00 PM Pacific
+    - cron: '30 23 * * 1-5'   #  3:30 PM Pacific
+    - cron: '15 0 * * 2-6'    #  4:15 PM Pacific (next day UTC)
+    - cron: '45 0 * * 2-6'    #  4:45 PM Pacific (next day UTC)
+  workflow_dispatch:
+
+jobs:
+  call-scraper:
+    uses: ./.github/workflows/_scraper-template.yml
+    with:
+      target_repo: mdostp/multistate-scrapers
+      python_version: '3.11'
+      pip_packages: 'requests pandas'
+      # One pair of files per month (Pacific time), e.g.
+      #   CA_people_in_line_2026-11.csv / CA_people_in_line_long_2026-11.csv
+      # keeps each file well under GitHub's 100 MB per-file limit.
+      run_commands: |
+        MONTH=$(TZ=America/Los_Angeles date +%Y-%m)
+        python CA_queue_scraper.py --once \
+          --output "CA_people_in_line_${MONTH}.csv" \
+          --long-output "CA_people_in_line_long_${MONTH}.csv"
+      commit_paths: '*.csv'
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
